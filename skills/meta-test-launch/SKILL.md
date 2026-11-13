@@ -39,6 +39,18 @@ Campaign  "Creative Testing"   objective Sales, ABO (budget on each ad set, none
 - Meta will give most of the money to one ad in each ad set (median 47%). That's expected; leave the
   starved ads on.
 
+## Step 0: connect Meta (once)
+Use Meta's **official Meta Ads connector** (Claude → Settings → Connectors → "Meta Ads", mcp.facebook.com; in Claude
+Code: `/mcp`). The user signs in with Facebook and picks the business and ad account, so no tokens or app setup
+are needed. Check it is connected before anything else; if not, ask the user to connect it and wait.
+
+With the connector: find the ad account, Page, Instagram account, pixel and past-customer audience through it, confirm
+them with the user, and build everything below with the connector's create tools (campaign, ad set, image/video upload,
+creative, ad), using **exactly the settings in "The exact build spec"**. Read back each created object and compare it to
+the spec. If the connector lacks a needed setting (e.g. placement asset customisation or opting out of creative
+enhancements), say which one and fall back to `scripts/launch.py` for that part (needs a system-user token, see
+`meta-api-access`).
+
 ## Intake: ask before building anything
 Never build from assumptions. Collect these from the user, a few at a time, confirming back what you heard.
 Offer the playbook default for each so they can just say "yes".
@@ -67,7 +79,21 @@ Offer the playbook default for each so they can just say "yes".
 Then write `launch.json`, run the dry run, and show the plan table and total daily spend. Build only after the
 user says go.
 
-## Running it
+## The exact build spec (connector or script)
+| Object | Field | Value |
+|---|---|---|
+| Campaign | name / objective / buying type | "Creative Testing" (reuse if it exists) / `OUTCOME_SALES` / `AUCTION`; no campaign budget (ABO); `special_ad_categories: []` |
+| Ad set | budget / bid | `daily_budget` = $100 per ad set (in cents: 10000) / `bid_strategy: LOWEST_COST_WITHOUT_CAP` |
+| | optimisation | `optimization_goal: OFFSITE_CONVERSIONS`, `billing_event: IMPRESSIONS`, `promoted_object: {pixel_id, custom_event_type: PURCHASE}` |
+| | attribution | `attribution_spec: [{CLICK_THROUGH, 7}, {ENGAGED_VIDEO_VIEW, 1}]` |
+| | targeting | countries (US), `age_min 18`, `age_max 65`, `targeting_automation.advantage_audience: 1`, `excluded_custom_audiences: [past customers]`; no interests, no placements set (= Advantage+ placements) |
+| | name / status | `<Product> \| <Concept> \| <Statics\|Videos> \| <Mon D>` / `PAUSED` unless the user said start now |
+| Ad (static) | creative | `asset_feed_spec` with the 4:5 image (label feed) and 9:16 image (label vertical), one body, one title, the URL, `call_to_action_types: [SHOP_NOW]`, `ad_formats: [SINGLE_IMAGE]`, `optimization_type: PLACEMENT`, and `asset_customization_rules`: vertical for FB/IG/Messenger story + reels (priority 1), feed for everything else (priority 2); identity = Page + Instagram account |
+| Ad (video) | creative | `object_story_spec.video_data` (video, thumbnail, SHOP_NOW → URL, first text/headline) + `asset_feed_spec` bodies/titles (up to 5 each, `optimization_type: DEGREES_OF_FREEDOM`) |
+| Both | enhancements | `degrees_of_freedom_spec.creative_features_spec`: every enhancement `OPT_OUT` (list in `scripts/launch.py` `ENHANCEMENTS_OFF`) |
+| Ad | name | `<file name> \| MM/DD/YYYY` |
+
+## Running it without the connector (script fallback)
 1. Fill `brand.json` once per ad account (copy `brand.example.json`): ad account, Page, Instagram account,
    pixel, past-customer audience id(s), `floor_roas`. Find ids with `meta-doctor`.
 2. Write `launch.json` from the intake (format in `launch.example.json`; `daily_budget_usd` can be set per
@@ -86,8 +112,10 @@ The numbers live in **`playbook.json`**, exported from a learner that watches th
 (kills, raises, cuts, launches) and fits the thresholds that match them. Read it rather than trusting the table
 below if they differ; `data_through` says how fresh it is.
 
-Run the read-only review whenever the user asks how the test is going (or on Wed-Fri review days):
-`python scripts/launch.py review --brand brand.json`   (needs `floor_roas` = break-even Meta ROAS in brand.json)
+Run the review whenever the user asks how the test is going (or on Wed-Fri review days). With the connector: pull,
+for each live ad in the testing campaign, lifetime and last-7-day spend and purchase value, and its share of its ad set's
+7-day spend, then apply the table below. Script: `python scripts/launch.py review --brand brand.json` (needs
+`floor_roas` = break-even Meta ROAS in brand.json).
 It lists every live ad in the testing campaign with spend, purchases, lifetime and 7-day ROAS vs floor, and its
 share of the ad set, and says KILL / GRADUATE / RAISE / hold with the reason. It changes nothing: show the user
 the moves and make them only on their go-ahead.

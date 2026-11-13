@@ -25,6 +25,11 @@ and how to launch campaigns safely.
 
 Suggested order for a new brand: **business-setup → api-access → doctor → pixel-capi → test-launch → reporting**.
 
+## Before you start: connect Meta
+Connect Meta's **official Meta Ads connector** in Claude (Settings → Connectors → Meta Ads; in Claude Code `/mcp`) and sign
+in with the Facebook account that manages the ad account. The skills use it for everything. The token + script path
+(`meta-api-access`, `meta-doctor`, `launch.py`) is only a fallback for setups the connector can't do.
+
 ## Install
 
 **Claude Code (plugin):**
