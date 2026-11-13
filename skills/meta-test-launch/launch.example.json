@@ -1,0 +1,34 @@
+{
+  "product": "Product Name",
+  "url": "https://www.example.com/products/product-name",
+  "bodies": [
+    "Primary text option 1",
+    "Primary text option 2",
+    "Primary text option 3"
+  ],
+  "titles": [
+    "Headline option 1",
+    "Headline option 2",
+    "Headline option 3"
+  ],
+  "concepts": [
+    {
+      "concept": "Hand drawn",
+      "ads": [
+        {"feed": "ads/hand-drawn/A1_napkin_4x5.jpg", "vertical": "ads/hand-drawn/A1_napkin_9x16.jpg"},
+        {"feed": "ads/hand-drawn/A2_sticky_4x5.jpg", "vertical": "ads/hand-drawn/A2_sticky_9x16.jpg"},
+        {"feed": "ads/hand-drawn/A3_paper_4x5.jpg", "vertical": "ads/hand-drawn/A3_paper_9x16.jpg",
+         "bodies": ["Copy just for this ad overrides the batch copy"]}
+      ]
+    },
+    {
+      "concept": "UGC unboxing",
+      "url": "https://www.example.com/products/product-name?variant=123",
+      "ads": [
+        {"video": "ads/ugc/VIDEO_01.mp4"},
+        {"video": "ads/ugc/VIDEO_02.mp4"},
+        {"video": "ads/ugc/VIDEO_03.mp4"}
+      ]
+    }
+  ]
+}

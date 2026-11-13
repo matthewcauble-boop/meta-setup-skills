@@ -1,5 +1,11 @@
 # Meta setup skills for Claude
 
+**Main skill: `meta-test-launch`.** Tell Claude *"run these 10 ads on Meta"* and it sorts them into concepts and builds
+the creative test the way a top DTC agency does it: one $100/day ad set per concept inside a "Creative Testing" Sales
+campaign, broad + Advantage+ audience, past customers excluded, Purchase optimisation, 7-day click, 4:5 + 9:16 placement
+versions, Meta's auto-enhancements off, created paused for review. It also carries the agency's kill / graduate / scale
+rules for the weeks after launch. The other skills get an account ready for it.
+
 A skills pack that teaches Claude (Claude Code or the Claude app) how to set up and run Meta
 (Facebook + Instagram) advertising for a brand, the way it actually works in practice: who should own
 what, how to get API access that doesn't break, how to prove tracking works, how to read the numbers,
@@ -7,6 +13,7 @@ and how to launch campaigns safely.
 
 | Skill | Use it for |
 |---|---|
+| `meta-test-launch` | **Launch a batch of ads as a correctly structured creative test, plus the review rules** |
 | `meta-business-setup` | Business portfolio, Page, Instagram, ad account, payment, domain, people and agency access |
 | `meta-api-access` | App, system user, asset assignment, non-expiring token, scopes, Standard vs Advanced Access |
 | `meta-doctor` | Read-only health check script: token, scopes, ad accounts, pixels, Pages, Instagram links |
@@ -14,7 +21,7 @@ and how to launch campaigns safely.
 | `meta-reporting` | Read-only Insights queries, MER vs Meta ROAS, weekly check-in format |
 | `meta-ads` | Campaign creation via the Marketing API (dry run first, created paused), browser-only steps, creative crop rules. From [boringmarketer/meta-ads-skill](https://github.com/boringmarketer/meta-ads-skill), MIT |
 
-Suggested order for a new brand: **business-setup → api-access → doctor → pixel-capi → reporting → ads**.
+Suggested order for a new brand: **business-setup → api-access → doctor → pixel-capi → test-launch → reporting**.
 
 ## Install
 

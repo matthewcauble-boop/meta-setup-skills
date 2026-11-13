@@ -1,0 +1,14 @@
+{
+  "ad_account_id": "act_0000000000",
+  "page_id": "000000000000000",
+  "instagram_user_id": "00000000000000000",
+  "pixel_id": "000000000000000",
+  "exclude_audience_ids": ["000000000000000"],
+  "campaign_name": "Creative Testing",
+  "daily_budget_usd": 100,
+  "countries": ["US"],
+  "age_min": 18,
+  "age_max": 65,
+  "cta": "SHOP_NOW",
+  "token_env_file": "~/.config/meta/.env"
+}
