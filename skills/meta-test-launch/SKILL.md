@@ -39,17 +39,42 @@ Campaign  "Creative Testing"   objective Sales, ABO (budget on each ad set, none
 - Meta will give most of the money to one ad in each ad set (median 47%). That's expected; leave the
   starved ads on.
 
+## Intake: ask before building anything
+Never build from assumptions. Collect these from the user, a few at a time, confirming back what you heard.
+Offer the playbook default for each so they can just say "yes".
+
+1. **Creatives.** "Where are the ads?" (a folder, or attached files). List what you found: each file, its size
+   and ratio. Then:
+   - Statics: each needs a **4:5 (1080×1350)** and ideally a **9:16 (1080×1920)** version. Pair them by name;
+     ask about any static missing its 9:16 ("ship 4:5 only, or wait for the vertical?").
+   - Videos: 9:16 preferred; flag anything under 5 s or over 60 s.
+   - `plan` also prints a size check and warns on wrong ratios or tiny files.
+2. **Concepts.** Propose how the ads group into concepts (one ad set each, 3-10 ads) based on names and what
+   they show, and ask the user to confirm or regroup. Example: "These 10 look like two ideas: 6 hand-drawn
+   statics and 4 unboxing videos, so two ad sets. OK?"
+3. **Product and landing page.** Which product, and the exact URL (variant link if the ads show one colour).
+4. **Copy.** Ask for primary text and headline(s). If they have none, draft 3-5 primary texts and 3-5
+   headlines from the product page and the creatives, show them, and get approval or edits. Statics paired
+   4:5 + 9:16 use one text + one headline (ask which); videos rotate up to 5 of each.
+5. **Budget.** "Each ad set gets **$100/day** by default (the playbook's test budget), so this batch is
+   **$N/day total, about $X/week**. Keep $100 per ad set, or change it?" Accept a per-concept budget too. Warn if
+   they want less than ~$50/day per ad set (too little to learn) or put many ads in one low budget.
+6. **Start.** Create paused for review (default), or turn on as soon as it's built? If a start date/time, note
+   it and switch on then.
+7. **Break-even ROAS** (`floor_roas`), once per brand, for the later reviews. If unknown, help work it out:
+   1 ÷ (gross margin after product, shipping and fees), then adjust for how much Meta over-claims vs the store.
+
+Then write `launch.json`, run the dry run, and show the plan table and total daily spend. Build only after the
+user says go.
+
 ## Running it
 1. Fill `brand.json` once per ad account (copy `brand.example.json`): ad account, Page, Instagram account,
-   pixel, past-customer audience id(s), budget, countries. Find ids with `meta-doctor`.
-2. Write `launch.json` for the batch (copy `launch.example.json`): product, landing URL, copy, and each
-   concept's ad files. If the user only gave files and a product, draft 3-5 primary texts and 3-5 headlines
-   from the product page and show them for approval first.
-3. **Dry run and show the user the plan:**
-   `python scripts/launch.py plan launch.json --brand brand.json`
-4. On approval: `python scripts/launch.py create launch.json --brand brand.json`
-   Everything is created **paused**; a receipt JSON lists every id. The user (or you, if they explicitly say
-   "turn them on") switches the ad sets on in Ads Manager, or pass `--activate`.
+   pixel, past-customer audience id(s), `floor_roas`. Find ids with `meta-doctor`.
+2. Write `launch.json` from the intake (format in `launch.example.json`; `daily_budget_usd` can be set per
+   concept).
+3. **Dry run and show the user:** `python scripts/launch.py plan launch.json --brand brand.json`
+4. On approval: `python scripts/launch.py create launch.json --brand brand.json` (add `--activate` only if they
+   chose to start immediately). Everything else is created **paused**; a receipt JSON lists every id.
 Never spend or activate without the user's go-ahead. Never touch existing ads or ad sets from this skill.
 
 **First live use on a new account:** run `create` on one small concept and check it in Ads Manager (placements

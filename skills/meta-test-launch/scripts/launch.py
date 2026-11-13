@@ -138,6 +138,42 @@ def targeting(b):
     return t
 
 
+def image_size(path):
+    """(width, height) for PNG/JPEG without third-party libraries, or None."""
+    with open(path, "rb") as f:
+        head = f.read(26)
+        if head[:8] == b"\x89PNG\r\n\x1a\n": return int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+        if head[:2] != b"\xff\xd8": return None
+        f.seek(2)
+        while True:
+            m = f.read(4)
+            if len(m) < 4 or m[0] != 0xFF: return None
+            seg = int.from_bytes(m[2:4], "big")
+            if m[1] in (0xC0, 0xC1, 0xC2):
+                d = f.read(5); return int.from_bytes(d[3:5], "big"), int.from_bytes(d[1:3], "big")
+            f.seek(seg - 2, 1)
+
+
+def check_assets(groups):
+    """Warnings about sizes and ratios."""
+    warn = []
+    for g in groups:
+        for a in g["ads"]:
+            for key, want, label in (("feed", 4 / 5, "4:5"), ("vertical", 9 / 16, "9:16")):
+                p = a.get(key)
+                if not p: continue
+                wh = image_size(p)
+                if not wh: warn.append(f"{Path(p).name}: can't read size (use JPG or PNG)"); continue
+                w, h = wh
+                if abs(w / h - want) > 0.03: warn.append(f"{Path(p).name}: {w}x{h} is not {label} (expected for the {key} slot)")
+                elif w < 1000: warn.append(f"{Path(p).name}: {w}x{h} is small; use 1080 px wide")
+            if a["kind"] == "static" and not a.get("vertical"):
+                warn.append(f"{Path(a['feed']).name}: no 9:16 version; Stories/Reels will crop the 4:5")
+            if a.get("video") and Path(a["video"]).stat().st_size < 200_000:
+                warn.append(f"{Path(a['video']).name}: file is tiny, check it's the real video")
+    return warn
+
+
 def print_plan(groups, b, campaign_id):
     print(f"Ad account {b['ad_account_id']}  |  campaign: {b['campaign_name']} "
           f"({'exists, ' + campaign_id if campaign_id else 'will be CREATED: Sales, ad set budgets'})")
@@ -153,7 +189,10 @@ def print_plan(groups, b, campaign_id):
                 if a["kind"] == "static" else f"video={Path(a['video']).name}"
             txt = "1 text + 1 headline (4:5 + 9:16 pair)" if a["kind"] == "static" and a.get("vertical")                 else f"{len(a['bodies'])} texts / {len(a['titles'])} headlines"
             print(f"    AD  {a['name']}  [{files}]  {txt}  -> {a['url']}")
-    print(f"\nTotal new daily budget: ${total}/day. Everything is created PAUSED unless --activate.")
+    print(f"\nTotal new daily budget: ${total:,.0f}/day (about ${total * 7:,.0f}/week). Everything is created PAUSED unless --activate.")
+    w = check_assets(groups)
+    if w:
+        print("\nCreative check:"); [print("  -", x) for x in w]
     warn = [g["adset_name"] for g in groups if len(g["ads"]) < 3]
     if warn: print("Note: fewer than 3 ads in", warn, "- tests work best with 3-10 variations of one concept.")
     if not b["exclude_audience_ids"]: print("Note: no past-customer exclusion set (brand.json exclude_audience_ids).")
