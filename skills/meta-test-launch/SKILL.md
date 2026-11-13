@@ -57,25 +57,31 @@ show the 9:16 on Stories/Reels, enhancements off, exclusion present) before laun
 rejects an enhancement key (they rename them), delete it from `ENHANCEMENTS_OFF` in the script.
 
 ## After launch: the review rules
-Judge each ad on three numbers: **spend so far**, **ROAS over the last 7 days vs the break-even floor**, and
-**its share of the ad set's spend last 7 days**. "Floor" = the brand's break-even ROAS (e.g. 3.0).
-Look every few days; make moves in batches on review days (mostly Wed-Fri).
+The numbers live in **`playbook.json`**, exported from a learner that watches the agency's real changes every night
+(kills, raises, cuts, launches) and fits the thresholds that match them. Read it rather than trusting the table
+below if they differ; `data_through` says how fresh it is.
 
-| Situation | Action |
+Run the read-only review whenever the user asks how the test is going (or on Wed-Fri review days):
+`python scripts/launch.py review --brand brand.json`   (needs `floor_roas` = break-even Meta ROAS in brand.json)
+It lists every live ad in the testing campaign with spend, purchases, lifetime and 7-day ROAS vs floor, and its
+share of the ad set, and says KILL / GRADUATE / RAISE / hold with the reason. It changes nothing: show the user
+the moves and make them only on their go-ahead.
+
+| Situation (defaults from playbook.json) | Action |
 |---|---|
-| No purchase after **$400** spent | kill the ad |
+| No purchase after **$400** | kill the ad |
+| Live under 7 days | hold (except the no-purchase rule) |
 | $400+ spent and lifetime ROAS < **0.5× floor** | kill |
-| Last 7 days spent $150+ at < **0.7× floor** | kill (this is the main rule — judge the last week, not lifetime) |
+| Last 7 days $150+ at < **0.7× floor** | kill — the main rule: judge the last week, not lifetime |
 | Whole ad set has nothing working | switch off the ad set |
-| One ad has ≥40% of the ad set's spend and last-7-day ROAS ≥ floor on $100+ | **graduate**: raise the ad set budget **2×** ($100 → $200) and keep the winner where it is |
-| Graduated ad set, 7-day ROAS ≥ floor | raise **+40-50%**, about once every 9 days per ad set |
-| 7-day ROAS between 0.7× and 1× floor | hold |
-| A winner's 7-day ROAS drops under ~0.6-0.7× floor (fatigue) | cut or kill, even if lifetime ROAS is great |
-| Budget cut | −33% |
-| Promo / sale period | scale up into it, pull budgets back 25-60% when it ends |
+| One ad has ≥40% of the ad set's spend and last 7 days ≥ floor on $100+ | **graduate**: double the ad set ($100 → $200), keep the winner where it is |
+| Already graduated, still ≥ floor | raise **+50%** (+40-50%), at most about once every 9 days per ad set |
+| Carrying the ad set at 0.7-1× floor | hold |
+| Cut | −33% |
+| Promo period | scale up into it; pull budgets back 25-60% when it ends |
 
-Typical timing: first decision on a test ad ~3-4 weeks and ~$450 in. Graduates had ~$1,000 spent at ~1.2×
-floor about two weeks in. About 1 in 9 test ads graduates, and those carry about half of all test spend.
+Typical timing: first decision on a test ad ~4 weeks and ~$450 in; graduates first raised ~11 days in at ~$730
+spent. Most test ads get killed; the few graduates carry about half of all test spend.
 
 **Advanced (rare):** proven winners can also be copied by **post ID** (same post, keeps likes/comments) into
 a broad "top performers" ad set with a ROAS-goal bid at ~1.15× floor, and into one stacked retargeting ad set

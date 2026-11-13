@@ -4,6 +4,7 @@
     python launch.py plan   launch.json --brand brand.json      # dry run: prints exactly what would be created
     python launch.py create launch.json --brand brand.json      # creates everything PAUSED, writes a receipt
     python launch.py create launch.json --brand brand.json --activate   # same, but turns the new ad sets on
+    python launch.py review --brand brand.json                  # read only: kill / graduate / hold per live ad
 
 Structure it builds (see ../SKILL.md for the why):
   campaign  "Creative Testing" (Sales objective, ABO: no campaign budget). Reused if it already exists.
@@ -20,6 +21,7 @@ import argparse, datetime as dt, json, mimetypes, os, sys, time, urllib.error, u
 from pathlib import Path
 
 API = "https://graph.facebook.com/v21.0"
+PLAYBOOK = json.load(open(Path(__file__).resolve().parent.parent / "playbook.json", encoding="utf-8"))
 VIDEO_EXT = {".mp4", ".mov", ".m4v"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png"}
 # Meta's automatic creative "enhancements" switched off (the reference account opts out of all of them).
@@ -37,12 +39,13 @@ def load_brand(path):
     miss = [k for k in need if not b.get(k)]
     if miss: sys.exit(f"brand.json is missing {miss}")
     b.setdefault("campaign_name", "Creative Testing")
-    b.setdefault("daily_budget_usd", 100)
+    b.setdefault("daily_budget_usd", PLAYBOOK["launch"]["daily_budget_usd"])
+    b.setdefault("floor_roas", None)
     b.setdefault("countries", ["US"])
     b.setdefault("age_min", 18); b.setdefault("age_max", 65)
     b.setdefault("exclude_audience_ids", [])
     b.setdefault("cta", "SHOP_NOW")
-    b.setdefault("ads_per_adset_max", 10)
+    b.setdefault("ads_per_adset_max", PLAYBOOK["launch"]["ads_per_adset_range"][1])
     return b
 
 
@@ -255,12 +258,69 @@ def create(groups, b, g, activate):
     if not activate: print("Review them in Ads Manager, then switch the ad sets on (or rerun with --activate next time).")
 
 
+# ---------------------------------------------------------------- review (read only)
+def purchases(row, key):
+    for x in row.get(key) or []:
+        if x["action_type"] in ("omni_purchase", "offsite_conversion.fb_pixel_purchase"): return float(x["value"])
+    return 0.0
+
+
+def review(b, g):
+    floor = b.get("floor_roas")
+    if not floor: sys.exit("set floor_roas (break-even Meta ROAS) in brand.json for review")
+    R = PLAYBOOK["review_rules"]
+    cid = find_campaign(g, b)
+    if not cid: sys.exit(f"campaign {b['campaign_name']} not found")
+    f = "ad_id,ad_name,adset_id,adset_name,spend,actions,action_values"
+    life = {r["ad_id"]: r for r in g.get(f"{cid}/insights", level="ad", fields=f, date_preset="maximum", limit=500).get("data", [])}
+    wk = {r["ad_id"]: r for r in g.get(f"{cid}/insights", level="ad", fields=f, date_preset="last_7d", limit=500).get("data", [])}
+    ads = {a["id"]: a for a in g.get(f"{cid}/ads", fields="id,effective_status,created_time,adset{daily_budget}", limit=500).get("data", [])
+           if a["effective_status"] == "ACTIVE"}
+    live = set(ads)
+    launch_budget = PLAYBOOK["launch"]["daily_budget_usd"]
+    min_days = PLAYBOOK["review_rules"].get("min_days_before_roas_kill", 7)
+    s7_set = {}
+    for r in wk.values(): s7_set[r["adset_id"]] = s7_set.get(r["adset_id"], 0) + float(r["spend"])
+    rows = []
+    for aid, L in life.items():
+        if aid not in live: continue
+        W = wk.get(aid, {}); sp = float(L["spend"]); val = purchases(L, "action_values"); n = purchases(L, "actions")
+        s7 = float(W.get("spend", 0)); v7 = purchases(W, "action_values")
+        rel = (val / sp / floor) if sp else 0; r7 = (v7 / s7 / floor) if s7 else 0
+        share = s7 / s7_set[L["adset_id"]] if s7_set.get(L["adset_id"]) else 0
+        age = (dt.datetime.now(dt.timezone.utc) - dt.datetime.strptime(ads[aid]["created_time"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=dt.timezone.utc)).days
+        budget = float((ads[aid].get("adset") or {}).get("daily_budget") or 0) / 100
+        if n == 0 and sp >= R["kill_no_purchase_after_spend"]: act = f"KILL (no sale after ${sp:,.0f})"
+        elif age < min_days: act = f"hold (only {age} days live)"
+        elif sp >= R["kill_lifetime_spend_min"] and rel < R["kill_lifetime_roas_below_x_floor"]: act = f"KILL (lifetime {rel:.2f}x floor)"
+        elif s7 >= R["kill_7d_spend_min"] and r7 < R["kill_7d_roas_below_x_floor"]: act = f"KILL (last 7 days {r7:.2f}x floor)"
+        elif s7 >= R["graduate_7d_spend_min"] and r7 >= R["graduate_7d_roas_at_least_x_floor"] and share >= R["graduate_share_of_adset_spend_min"]:
+            act = (f"GRADUATE: ad set ${budget:,.0f} -> ${budget * R['first_raise_step']:,.0f}/day" if budget and budget < 2 * launch_budget
+                   else f"RAISE ad set ${budget:,.0f} -> ${budget * R['raise_step_median']:,.0f}/day if not raised in {R['days_between_raises_median']}+ days")                   + f" ({r7:.2f}x floor, {share:.0%} of ad set)"
+        elif s7 >= R["kill_7d_spend_min"] and r7 < R["graduate_7d_roas_at_least_x_floor"] and share >= R["graduate_share_of_adset_spend_min"]:
+            act = f"hold (carrying the ad set at {r7:.2f}x floor; kill under {R['kill_7d_roas_below_x_floor']}x)"
+        else: act = "hold"
+        rows.append((L["adset_name"], L["ad_name"], sp, n, rel, s7, r7, share, act))
+    rows.sort(key=lambda r: (r[0], -r[2]))
+    print(f"Review of {b['campaign_name']} (floor ROAS {floor}); rules from playbook.json, data through {PLAYBOOK['data_through']}")
+    cur = None
+    for r in rows:
+        if r[0] != cur: cur = r[0]; print(f"\n{cur}")
+        print(f"  {r[1][:48]:48} spent ${r[2]:>7,.0f}  buys {r[3]:>4.0f}  life {r[4]:.2f}x  7d ${r[5]:>6,.0f} {r[6]:.2f}x  share {r[7]:>4.0%}  -> {r[8]}")
+    print("\nRead only: nothing was changed. Raise graduates 2x first, then +40-50% about every "
+          f"{R['days_between_raises_median']} days; cuts {R['cut_step_median']:.0%} of budget.")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["plan", "create"]); ap.add_argument("launch"); ap.add_argument("--brand", required=True)
+    ap.add_argument("cmd", choices=["plan", "create", "review"]); ap.add_argument("launch", nargs="?"); ap.add_argument("--brand", required=True)
     ap.add_argument("--activate", action="store_true")
     a = ap.parse_args()
-    b = load_brand(a.brand); launch = json.load(open(a.launch, encoding="utf-8-sig"))
+    b = load_brand(a.brand)
+    if a.cmd == "review":
+        return review(b, Graph(token(b)))
+    if not a.launch: sys.exit("plan/create need a launch.json")
+    launch = json.load(open(a.launch, encoding="utf-8-sig"))
     groups = group_assets(launch, b, Path(a.launch).resolve().parent)
     g = Graph(token(b))
     cid = find_campaign(g, b)

@@ -4,7 +4,9 @@
 the creative test the way a top DTC agency does it: one $100/day ad set per concept inside a "Creative Testing" Sales
 campaign, broad + Advantage+ audience, past customers excluded, Purchase optimisation, 7-day click, 4:5 + 9:16 placement
 versions, Meta's auto-enhancements off, created paused for review. It also carries the agency's kill / graduate / scale
-rules for the weeks after launch. The other skills get an account ready for it.
+rules for the weeks after launch (`launch.py review`, read only). Those rules live in `skills/meta-test-launch/playbook.json`,
+exported from a learner that watches the agency's real changes every night, so they stay current. The other skills get an
+account ready for it.
 
 A skills pack that teaches Claude (Claude Code or the Claude app) how to set up and run Meta
 (Facebook + Instagram) advertising for a brand, the way it actually works in practice: who should own
