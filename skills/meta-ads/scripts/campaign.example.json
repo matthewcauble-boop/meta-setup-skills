@@ -1,0 +1,53 @@
+{
+  "_comment": "Copy this, fill it in, keep it out of git if it identifies a client. Budgets are in MINOR currency units (cents): 3000 = $30.00/day.",
+
+  "ad_account_id": "act_0000000000",
+  "page_id": "0000000000",
+
+  "campaign": {
+    "name": "Brand | Market | Leads | 2026-09",
+    "objective": "OUTCOME_LEADS",
+    "special_ad_categories": []
+  },
+
+  "adset": {
+    "name": "Market +25mi | Broad",
+    "daily_budget": 3000,
+    "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+    "optimization_goal": "OFFSITE_CONVERSIONS",
+    "pixel_id": "0000000000",
+    "custom_event_type": "LEAD",
+    "targeting": {
+      "geo_locations": {
+        "custom_locations": [
+          { "latitude": 35.2271, "longitude": -80.8431, "radius": 25, "distance_unit": "mile" }
+        ]
+      },
+      "age_min": 18,
+      "age_max": 65,
+      "genders": [1, 2],
+      "targeting_automation": { "advantage_audience": 1 }
+    }
+  },
+
+  "creative": {
+    "image_dir": "./creative-out",
+    "link": "https://example.com/landing/",
+    "utm": {
+      "utm_source": "facebook",
+      "utm_medium": "paid",
+      "utm_campaign": "market-leads-2026-09"
+    },
+    "message": "Body copy that appears above the image. The first ~125 characters show before \"See more\", so front-load it.",
+    "headline": "Short bold line under the image",
+    "description": "Small line under the headline",
+    "call_to_action": "LEARN_MORE"
+  },
+
+  "copy_guards": [
+    {
+      "name": "earnings claim (rejected in EMPLOYMENT and CREDIT categories)",
+      "pattern": "\\$\\s?\\d|\\b\\d+\\s?(k|dollars|usd)\\b|\\bper hour\\b|/hr\\b"
+    }
+  ]
+}

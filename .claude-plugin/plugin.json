@@ -1,0 +1,6 @@
+{
+  "name": "meta-setup-skills",
+  "version": "1.0.0",
+  "description": "Claude skills for setting up Meta (Facebook/Instagram) for a brand: Business portfolio, API access with a system-user token, pixel + Conversions API, read-only reporting, campaign launch, and a health-check script.",
+  "skills": "./skills"
+}

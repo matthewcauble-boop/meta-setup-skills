@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+*.log
+
+# Real campaign configs identify clients and carry account ids — keep the
+# example only.
+*-campaign.json
+!scripts/campaign.example.json
+creative-out/
+out/
