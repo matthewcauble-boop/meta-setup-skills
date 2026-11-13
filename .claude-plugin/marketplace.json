@@ -1,11 +1,17 @@
 {
   "name": "meta-setup-skills",
-  "owner": { "name": "Matt Cauble" },
+  "owner": {
+    "name": "Matt Cauble"
+  },
   "plugins": [
     {
       "name": "meta-setup-skills",
       "source": "./",
-      "description": "Set up and verify Meta ads, API access, pixel/CAPI and reporting with Claude."
+      "description": "Set up and verify Meta ads, API access, pixel/CAPI and reporting with Claude.",
+      "author": {
+        "name": "Matt Cauble"
+      }
     }
-  ]
+  ],
+  "description": "Claude skills for launching and running Meta ads the proven DTC-agency way, plus account setup."
 }

@@ -1,9 +1,13 @@
 ---
 name: meta-ads
-description: "Launch and verify Meta (Facebook/Instagram) ad campaigns end to end — the Business Manager permission chain, programmatic campaign creation via the Marketing API, the steps that only exist in the browser UI, crop-safe creative, and pixel/Conversions API tracking that is actually proven to work. Use when setting up Meta API access, creating or debugging campaigns, or verifying Meta conversion tracking."
+description: "Reference for Meta (Facebook/Instagram) ads plumbing: the Business Manager permission chain, Marketing API gotchas, the steps that only exist in the browser UI, crop-safe creative rules, and proving pixel/Conversions API tracking. To actually launch a batch of ads, use meta-test-launch instead (it builds the proven test structure); use this skill when an API call is rejected, when doing a browser-only step, or for creative crop rules."
 ---
 
 # Meta Ads — setup, launch, verification
+
+> In this pack, **launching ads is done with `meta-test-launch`**, which builds the proven creative-test structure. Use this
+> skill as the reference for API rejections, browser-only steps, creative crop rules and tracking checks.
+> (Description and this note edited from the upstream MIT version.)
 
 Everything here was learned by getting it wrong in production first. The API
 rejections are real rejections, the permission chain is the one that actually
