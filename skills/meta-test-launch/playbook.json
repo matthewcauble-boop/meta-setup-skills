@@ -1,7 +1,7 @@
 {
  "source": "learned nightly from a DTC agency's real Meta changes (account names and ids removed)",
- "data_through": "2026-11-13",
- "exported": "2026-11-13",
+ "data_through": "2026-11-16",
+ "exported": "2026-11-16",
  "launch": {
   "daily_budget_usd": 100.0,
   "ads_per_adset_median": 6.0,
@@ -19,7 +19,7 @@
   "single_ads_added_to_old_adsets": 4
  },
  "delivery": {
-  "top_ad_share_of_adset_spend_median": 0.48
+  "top_ad_share_of_adset_spend_median": 0.46
  },
  "review_rules": {
   "kill_no_purchase_after_spend": 400,
@@ -33,27 +33,27 @@
   "first_raise_step": 2.0,
   "raise_step_median": 1.5,
   "cut_step_median": 0.67,
-  "days_between_raises_median": 9,
+  "days_between_raises_median": 6.5,
   "min_days_before_roas_kill": 7
  },
  "timing": {
   "first_decision_days_median": 27,
   "first_decision_spend_median": 451,
-  "kill_spend_median": 406,
-  "graduated": 25,
-  "graduate_first_raise_spend_median": 733,
-  "graduate_first_raise_days_median": 11
+  "kill_spend_median": 412,
+  "graduated": 28,
+  "graduate_first_raise_spend_median": 609,
+  "graduate_first_raise_days_median": 11.0
  },
  "rule_accuracy_holdout": {
-  "precision": 0.77,
-  "recall": 0.83
+  "precision": 0.8,
+  "recall": 0.8
  },
  "second_account": {
   "cells_per_launch": 2,
   "days_between_launches": 13.0,
   "ads_at_launch": 5.0,
   "start_budget": 100.0,
-  "kill_spend": 321.94,
+  "kill_spend": 332.7,
   "first_move_day": 16.5,
   "up_size": 0.35,
   "down_size": -0.2
